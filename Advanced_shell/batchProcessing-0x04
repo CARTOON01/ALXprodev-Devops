@@ -30,6 +30,8 @@ for name in "${POKEMONS[@]}"; do
     fetch_pokemon "$name" &
 done
 
-wait
+for pid in $(jobs -p); do
+    wait "$pid"
+done
 
-echo "✅ All data fetch operations completed."
+echo "✅ All background jobs completed."
