@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OUTPUT_FILE="data.json"
-ERROR_LOG="error.txt"
+ERROR_LOG="errors.txt"
 POKEMON="pikachu"
 API_URL="https://pokeapi.co/api/v2/pokemon/${POKEMON}"
 
