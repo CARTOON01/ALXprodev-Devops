@@ -3,20 +3,39 @@
 POKEMONS=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
 
 OUTPUT_DIR="pokemon_data"
+ERROR_LOG="fetch_errors.log"
+
 mkdir -p "$OUTPUT_DIR"
+> "$ERROR_LOG"  
 
-for name in "${POKEMONS[@]}"
-do
-    echo "Fetching data for $name..."
-    response=$(curl -s -w "%{http_code}" -o "$OUTPUT_DIR/${name}.json" "https://pokeapi.co/api/v2/pokemon/$name")
-    status="${response: -3}"
+fetch_pokemon() {
+    local name="$1"
+    local attempts=0
+    local max_attempts=3
+    local success=0
 
-    if [ "$status" -eq 200 ]; then
-        echo "Saved data to $OUTPUT_DIR/${name}.json ✅"
-    else
-        echo "❌ Failed to fetch data for $name (HTTP $status)"
-        rm -f "$OUTPUT_DIR/${name}.json"
+    while [ $attempts -lt $max_attempts ]; do
+        echo "Fetching data for $name... (attempt $((attempts + 1)))"
+        response=$(curl -s -w "%{http_code}" -o "$OUTPUT_DIR/${name}.json" "https://pokeapi.co/api/v2/pokemon/$name")
+        status="${response: -3}"
+
+        if [ "$status" -eq 200 ]; then
+            echo "Saved data to $OUTPUT_DIR/${name}.json ✅"
+            success=1
+            break
+        else
+            attempts=$((attempts + 1))
+            sleep 1  
+        fi
+    done
+
+    if [ $success -eq 0 ]; then
+        echo "❌ Failed to fetch data for $name after $max_attempts attempts (HTTP $status)" | tee -a "$ERROR_LOG"
+        rm -f "$OUTPUT_DIR/${name}.json"  
     fi
+}
 
-    sleep 1
+for name in "${POKEMONS[@]}"; do
+    fetch_pokemon "$name"
+    sleep 1 
 done
